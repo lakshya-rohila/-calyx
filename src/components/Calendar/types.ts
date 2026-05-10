@@ -3,8 +3,10 @@ import type { DayData, WeekConfig } from '../../types';
 import type { CalendarTheme } from '../theme/types';
 import type { ThemeName } from '../theme/themes';
 import type { CalendarEvent } from '../../types/events';
+import type { TimelineConfig } from '../../types/timeline';
+import type { AgendaConfig } from '../../types/agenda';
 
-export type CalendarMode = 'month' | 'week' | 'day';
+export type CalendarMode = 'month' | 'week' | 'day' | 'timeline' | 'agenda';
 
 export type CalendarProps = {
   // Mode
@@ -42,6 +44,14 @@ export type CalendarProps = {
   // Events (Phase 3) - pass your own event data
   events?: CalendarEvent[];
 
+  // Phase 4: Timeline & Agenda views
+  timelineConfig?: TimelineConfig;
+  agendaConfig?: AgendaConfig;
+
+  // Event interaction
+  onEventPress?: (event: CalendarEvent) => void;
+  onEventLongPress?: (event: CalendarEvent) => void;
+
   // Callbacks
   onMonthChange?: (year: number, month: number) => void;
   onWeekChange?: (weekNumber: number, year: number) => void;
@@ -77,6 +87,10 @@ export type CalendarMonthProps = {
 
   // Events (Phase 3) - pass your own event data
   events?: CalendarEvent[];
+
+  // Event interaction
+  onEventPress?: (event: CalendarEvent) => void;
+  onEventLongPress?: (event: CalendarEvent) => void;
 
   // Callbacks
   onMonthChange?: (year: number, month: number) => void;
