@@ -8,24 +8,24 @@ import {
   Pressable,
   useColorScheme,
 } from 'react-native';
-import { BasicExample } from './example/screens/BasicExample';
-import { MonthExample } from './example/screens/MonthExample';
-import { WeekExample } from './example/screens/WeekExample';
+import { CalendarDemo } from './example/screens/CalendarDemo';
+import { ThemeSwitcher } from './example/screens/ThemeSwitcher';
+import { CustomizationDemo } from './example/screens/CustomizationDemo';
 
-type TabKey = 'basic' | 'month' | 'week';
+type TabKey = 'demo' | 'themes' | 'custom';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
-  const [activeTab, setActiveTab] = useState<TabKey>('basic');
+  const [activeTab, setActiveTab] = useState<TabKey>('demo');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'basic':
-        return <BasicExample />;
-      case 'month':
-        return <MonthExample />;
-      case 'week':
-        return <WeekExample />;
+      case 'demo':
+        return <CalendarDemo />;
+      case 'themes':
+        return <ThemeSwitcher />;
+      case 'custom':
+        return <CustomizationDemo />;
     }
   };
 
@@ -34,24 +34,24 @@ function App() {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Calyx RN - Phase 1</Text>
+        <Text style={styles.headerTitle}>Calyx RN • Phase 2</Text>
       </View>
 
       <View style={styles.tabs}>
         <TabButton
-          label="Basic"
-          active={activeTab === 'basic'}
-          onPress={() => setActiveTab('basic')}
+          label="Demo"
+          active={activeTab === 'demo'}
+          onPress={() => setActiveTab('demo')}
         />
         <TabButton
-          label="Month"
-          active={activeTab === 'month'}
-          onPress={() => setActiveTab('month')}
+          label="Themes"
+          active={activeTab === 'themes'}
+          onPress={() => setActiveTab('themes')}
         />
         <TabButton
-          label="Week"
-          active={activeTab === 'week'}
-          onPress={() => setActiveTab('week')}
+          label="Custom"
+          active={activeTab === 'custom'}
+          onPress={() => setActiveTab('custom')}
         />
       </View>
 
