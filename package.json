@@ -21,6 +21,9 @@
     "LICENSE"
   ],
   "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
     "build": "tsup",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -45,6 +48,9 @@
     "@shopify/flash-list": "^2.3.1",
     "date-fns": "^4.1.0",
     "immer": "^11.1.8",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "^5.2.1",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
