@@ -2,171 +2,181 @@
 
 Premium headless calendar library for React Native.
 
-**Phase 1:** Core Foundation - Pure engine, Zustand store, and three React hooks.
+**Current Version:** Phase 2 (v0.2.0) - UI Component System
 
 ## Installation
 
 ```bash
-npm install @calyx/rn
+npm install @calyx/rn date-fns
 # or
-yarn add @calyx/rn
+yarn add @calyx/rn date-fns
 ```
+
+**Peer dependencies:** react >=18.0.0, react-native >=0.70.0, date-fns ^4.0.0
 
 ## Quick Start
 
-### Simple Month Calendar
+### Simple Calendar
 
 ```tsx
-import { useMonthCalendar } from '@calyx/rn';
+import { Calendar } from '@calyx/rn';
 
 function MyCalendar() {
-  const calendar = useMonthCalendar({ weekStartsOn: 0 });
+  const [selected, setSelected] = useState(new Date());
 
   return (
-    <View>
-      {calendar.monthData.weeks.map(week => (
-        <View key={week.weekNumber} style={{ flexDirection: 'row' }}>
-          {week.days.map(day => (
-            <Pressable
-              key={day.date.toString()}
-              onPress={() => calendar.selectDate(day.date)}
-            >
-              <Text>{day.calendarDate.day}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ))}
-
-      <Button title="Previous" onPress={calendar.goToPreviousMonth} />
-      <Button title="Next" onPress={calendar.goToNextMonth} />
-    </View>
+    <Calendar
+      mode="month"
+      selected={selected}
+      onSelect={setSelected}
+      theme="dark"
+    />
   );
 }
 ```
 
-### Week Calendar
+### Month View
 
 ```tsx
-import { useWeekCalendar } from '@calyx/rn';
+import { Calendar } from '@calyx/rn';
 
-function WeekView() {
-  const calendar = useWeekCalendar({ weekStartsOn: 1 });
+<Calendar.Month
+  selected={date}
+  onSelect={setDate}
+  weekStartsOn={1}
+  theme="ocean"
+/>
+```
 
-  return (
-    <View style={{ flexDirection: 'row' }}>
-      {calendar.weekData.days.map(day => (
-        <Pressable key={day.date.toString()} onPress={() => calendar.selectDate(day.date)}>
-          <Text>{day.calendarDate.day}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
+### Week View
+
+```tsx
+<Calendar.Week
+  selected={date}
+  onSelect={setDate}
+  showWeekNumber
+  theme="forest"
+/>
+```
+
+### Custom Theme
+
+```tsx
+import { ThemeProvider } from '@calyx/rn';
+
+<ThemeProvider theme="sunset">
+  <Calendar mode="month" />
+</ThemeProvider>
 ```
 
 ## Features
 
-- **Headless Architecture** - Zero UI opinions, complete rendering control
-- **Three Core Hooks** - useCalendar, useMonthCalendar, useWeekCalendar
-- **TypeScript-First** - Strict mode, full type inference
-- **High Performance** - Memoized calculations, virtualization support
-- **Zero UI** - Bring your own components and styling
-- **Configurable** - Week start day, locale support via date-fns
-- **Well Tested** - >85% coverage
+- 🎯 **Headless + UI** - Use hooks alone or ready-made components
+- 🎨 **6 Built-in Themes** - Light, dark, ocean, forest, sunset, minimal
+- 🪝 **Compound Components** - Calendar.Month, Calendar.Week, Calendar.Day
+- 🎭 **Full Customization** - Render props for complete control
+- 📘 **TypeScript-First** - Strict mode, full type inference
+- ♿️ **Accessible** - WCAG 2.1 AA compliant
+- ⚡️ **High Performance** - Memoized, virtualization-ready
+- 📱 **iOS & Android** - Works on both platforms
 
 ## API
 
-### useCalendar
+### Calendar
 
-Base calendar hook for state management and navigation.
+Main component with mode switching:
 
 ```tsx
-const calendar = useCalendar({
-  initialDate: new Date('2026-05-01'),
-  weekStartsOn: 0, // 0 = Sunday, 1 = Monday
-  onDateChange: (date) => console.log('Date changed:', date),
-  onDateSelect: (date) => console.log('Selected:', date),
-});
+<Calendar
+  mode="month" // 'month' | 'week' | 'day'
+  selected={date}
+  onSelect={setDate}
+  theme="dark"
+  weekStartsOn={1}
+/>
 ```
 
-**Returns:**
-- `currentDate`: Current viewing date
-- `selectedDate`: User-selected date (null if none)
-- `weekConfig`: Week configuration
-- `setCurrentDate(date)`: Update current date
-- `selectDate(date)`: Select a date
-- `clearSelection()`: Clear selection
-- `goToToday()`: Jump to today
-- `isDateSelected(date)`: Check if date is selected
-
-### useMonthCalendar
-
-Extends useCalendar with month-specific functionality.
+### Compound Components
 
 ```tsx
-const calendar = useMonthCalendar({
-  weekStartsOn: 0,
-  onMonthChange: (year, month) => console.log(`Viewing ${year}-${month}`),
-});
+// Month view
+<Calendar.Month
+  selected={date}
+  onSelect={setDate}
+  renderDay={(day) => <CustomDay day={day} />}
+/>
+
+// Week view
+<Calendar.Week
+  selected={date}
+  onSelect={setDate}
+  showWeekNumber
+/>
+
+// Day view
+<Calendar.Day value={date} onChange={setDate} />
 ```
 
-**Returns:** All from useCalendar plus:
-- `monthData`: Complete month structure with weeks
-- `year`: Current year
-- `month`: Current month (1-12)
-- `goToNextMonth()`: Navigate to next month
-- `goToPreviousMonth()`: Navigate to previous month
-- `goToMonth(year, month)`: Jump to specific month
-- `generateMonthAtOffset(offset)`: For infinite scroll
-- `getMonthKey(offset)`: Unique key for FlashList
+### Themes
 
-### useWeekCalendar
-
-Extends useCalendar with week-specific functionality.
+Built-in themes: `light`, `dark`, `ocean`, `forest`, `sunset`, `minimal`
 
 ```tsx
-const calendar = useWeekCalendar({
-  weekStartsOn: 1,
-  onWeekChange: (weekNum, year) => console.log(`Week ${weekNum}`),
-});
+// Pass theme name
+<Calendar theme="dark" />
+
+// Or use ThemeProvider
+<ThemeProvider theme="ocean">
+  <Calendar />
+</ThemeProvider>
+
+// Or pass custom theme object
+<Calendar theme={myCustomTheme} />
 ```
 
-**Returns:** All from useCalendar plus:
-- `weekData`: Complete week structure (7 days)
-- `weekNumber`: ISO week number
-- `year`: Current year
-- `goToNextWeek()`: Navigate to next week
-- `goToPreviousWeek()`: Navigate to previous week
-- `goToWeek(weekNum, year)`: Jump to specific week
-- `generateWeekAtOffset(offset)`: For horizontal scroll
-- `getWeekKey(offset)`: Unique key for FlashList
-
-## Advanced Usage
-
-### Custom Store
-
-Create isolated calendar instances:
+### Headless Hooks (Phase 1)
 
 ```tsx
-import { createCalendarStore } from '@calyx/rn';
+import { useMonthCalendar } from '@calyx/rn';
 
-const customStore = createCalendarStore({ weekStartsOn: 1 });
+const calendar = useMonthCalendar({ weekStartsOn: 0 });
 
-function MyCalendar() {
-  const calendar = useMonthCalendar({ store: customStore });
-  // ...
-}
+// Access: calendar.monthData, calendar.goToNextMonth(), etc.
 ```
 
-### Direct Engine Access
+## Customization
 
-Use pure functions for custom logic:
+### Custom Day Rendering
 
 ```tsx
-import { generateMonthData, addMonths } from '@calyx/rn';
+<Calendar.Month
+  renderDay={(day) => (
+    <View>
+      <Text>{day.calendarDate.day}</Text>
+      {day.isToday && <Badge>Today</Badge>}
+      {hasEvent(day.date) && <Dot />}
+    </View>
+  )}
+/>
+```
 
-const nextMonth = addMonths(new Date(), 1);
-const monthData = generateMonthData(nextMonth, { weekStartsOn: 0 });
+### Custom Theme
+
+```tsx
+const myTheme = {
+  colors: {
+    background: '#1a1a1a',
+    foreground: '#ffffff',
+    primary: '#ff6b6b',
+    // ... other colors
+  },
+  spacing: { cellSize: 48, cellGap: 2, padding: 16, headerSpacing: 12 },
+  borderRadius: { cell: 24, container: 12 },
+  fontSize: { day: 16, weekday: 12, header: 20 },
+  fontWeight: { regular: '400', bold: '600' },
+};
+
+<Calendar theme={myTheme} />
 ```
 
 ## Development
@@ -178,11 +188,12 @@ npm install
 # Run tests
 npm test
 
-# Run tests in watch mode
-npm test -- --watch
-
-# Type check
+# Run type check
 npm run typecheck
+
+# Run example app
+npm run ios
+npm run android
 
 # Build
 npm run build
@@ -190,8 +201,8 @@ npm run build
 
 ## Roadmap
 
-**Phase 1 (Current):** Core foundation - engine, store, hooks  
-**Phase 2:** UI component system  
+**Phase 1:** ✅ Core foundation (hooks, engine, store)  
+**Phase 2:** ✅ UI component system (current)  
 **Phase 3:** Event management  
 **Phase 4:** Advanced views (timeline, agenda)  
 **Phase 5:** Theme engine  
@@ -206,5 +217,4 @@ MIT
 
 ## Contributing
 
-See example app in `App.tsx` for usage patterns.
-# -calyx
+See example app for usage patterns. Tests required for all PRs.
