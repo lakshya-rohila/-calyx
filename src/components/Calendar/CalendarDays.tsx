@@ -3,7 +3,6 @@ import { View, StyleSheet } from 'react-native';
 import { DayCell } from '../primitives';
 import { isSameDay } from '../../engine/calendar-math';
 import type { CalendarDaysProps } from './types';
-import type { CalendarEvent } from '../../types/events';
 
 export function CalendarDays({
   monthData,
@@ -16,7 +15,7 @@ export function CalendarDays({
   disabled = false,
   theme,
   events = [],
-}: CalendarDaysProps & { events?: CalendarEvent[] }) {
+}: CalendarDaysProps) {
   const isDateDisabled = (date: Date): boolean => {
     if (disabled) return true;
     if (minDate && date < minDate) return true;
@@ -30,7 +29,7 @@ export function CalendarDays({
     return isSameDay(date, selected);
   };
 
-  const getEventsForDate = (date: Date): CalendarEvent[] => {
+  const getEventsForDate = (date: Date) => {
     const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const nextDay = new Date(targetDay);
     nextDay.setDate(nextDay.getDate() + 1);

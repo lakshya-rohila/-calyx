@@ -8,7 +8,6 @@ import { useTheme } from '../theme';
 import { themes } from '../theme/themes';
 import type { CalendarMonthProps } from './types';
 import type { CalendarTheme } from '../theme/types';
-import type { CalendarEvent } from '../../types/events';
 
 export function CalendarMonth({
   value,
@@ -27,7 +26,7 @@ export function CalendarMonth({
   onMonthChange,
   style,
   events = [],
-}: CalendarMonthProps & { events?: CalendarEvent[] }) {
+}: CalendarMonthProps) {
   // Resolve theme
   const contextTheme = useTheme();
   const resolvedTheme: CalendarTheme = themeProp

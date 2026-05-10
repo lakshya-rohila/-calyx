@@ -2,6 +2,7 @@ import type { ViewStyle } from 'react-native';
 import type { DayData, WeekConfig } from '../../types';
 import type { CalendarTheme } from '../theme/types';
 import type { ThemeName } from '../theme/themes';
+import type { CalendarEvent } from '../../types/events';
 
 export type CalendarMode = 'month' | 'week' | 'day';
 
@@ -38,6 +39,9 @@ export type CalendarProps = {
   showWeekNumbers?: boolean;
   highlightToday?: boolean;
 
+  // Events (Phase 3) - pass your own event data
+  events?: CalendarEvent[];
+
   // Callbacks
   onMonthChange?: (year: number, month: number) => void;
   onWeekChange?: (weekNumber: number, year: number) => void;
@@ -70,6 +74,9 @@ export type CalendarMonthProps = {
 
   // Customization
   renderDay?: (day: DayData) => React.ReactNode;
+
+  // Events (Phase 3) - pass your own event data
+  events?: CalendarEvent[];
 
   // Callbacks
   onMonthChange?: (year: number, month: number) => void;
@@ -134,4 +141,5 @@ export type CalendarDaysProps = {
   disabledDates?: Date[];
   disabled?: boolean;
   theme: CalendarTheme;
+  events?: CalendarEvent[];
 };

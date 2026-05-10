@@ -35,6 +35,31 @@ function MyCalendar() {
 }
 ```
 
+### Calendar with Events (from your API)
+
+```tsx
+import { Calendar } from '@calyx/rn';
+import type { CalendarEvent } from '@calyx/rn';
+
+function MyCalendar() {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // Fetch from your API
+  useEffect(() => {
+    fetchEventsFromAPI().then(setEvents);
+  }, []);
+
+  return (
+    <Calendar
+      mode="month"
+      events={events}
+    />
+  );
+}
+```
+
+📖 **[Full Events API Guide](./EVENTS_API_GUIDE.md)** - Shows how to integrate with your backend, React Query, Redux, GraphQL, etc.
+
 ### Month View
 
 ```tsx
@@ -74,6 +99,7 @@ import { ThemeProvider } from '@calyx/rn';
 - 🎯 **Headless + UI** - Use hooks alone or ready-made components
 - 🎨 **6 Built-in Themes** - Light, dark, ocean, forest, sunset, minimal
 - 🪝 **Compound Components** - Calendar.Month, Calendar.Week, Calendar.Day
+- 📅 **Event System** - Display events from any API or backend
 - 🎭 **Full Customization** - Render props for complete control
 - 📘 **TypeScript-First** - Strict mode, full type inference
 - ♿️ **Accessible** - WCAG 2.1 AA compliant
@@ -202,8 +228,8 @@ npm run build
 ## Roadmap
 
 **Phase 1:** ✅ Core foundation (hooks, engine, store)  
-**Phase 2:** ✅ UI component system (current)  
-**Phase 3:** Event management  
+**Phase 2:** ✅ UI component system  
+**Phase 3:** ✅ Event management (current)  
 **Phase 4:** Advanced views (timeline, agenda)  
 **Phase 5:** Theme engine  
 **Phase 6:** Animation system  
