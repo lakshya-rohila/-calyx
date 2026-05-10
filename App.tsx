@@ -12,8 +12,10 @@ import { CalendarDemo } from './example/screens/CalendarDemo';
 import { ThemeSwitcher } from './example/screens/ThemeSwitcher';
 import { CustomizationDemo } from './example/screens/CustomizationDemo';
 import { CalendarWithAPIDemo } from './example/screens/CalendarWithAPIDemo';
+import { TimelineDemo } from './example/screens/TimelineDemo';
+import { AgendaDemo } from './example/screens/AgendaDemo';
 
-type TabKey = 'demo' | 'themes' | 'custom' | 'api';
+type TabKey = 'demo' | 'themes' | 'custom' | 'timeline' | 'agenda';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -27,8 +29,10 @@ function App() {
         return <ThemeSwitcher />;
       case 'custom':
         return <CustomizationDemo />;
-      case 'api':
-        return <CalendarWithAPIDemo />;
+      case 'timeline':
+        return <TimelineDemo />;
+      case 'agenda':
+        return <AgendaDemo />;
     }
   };
 
@@ -37,7 +41,7 @@ function App() {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Calyx RN • Phase 3</Text>
+        <Text style={styles.headerTitle}>Calyx RN • Phase 4</Text>
       </View>
 
       <View style={styles.tabs}>
@@ -47,9 +51,14 @@ function App() {
           onPress={() => setActiveTab('demo')}
         />
         <TabButton
-          label="API"
-          active={activeTab === 'api'}
-          onPress={() => setActiveTab('api')}
+          label="Timeline"
+          active={activeTab === 'timeline'}
+          onPress={() => setActiveTab('timeline')}
+        />
+        <TabButton
+          label="Agenda"
+          active={activeTab === 'agenda'}
+          onPress={() => setActiveTab('agenda')}
         />
         <TabButton
           label="Themes"
