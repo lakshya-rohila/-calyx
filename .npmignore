@@ -1,0 +1,54 @@
+# Development files
+__tests__
+example
+.github
+.vscode
+.cursor
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Build artifacts
+ios
+android
+node_modules
+.expo
+.expo-shared
+
+# Config files
+.eslintrc.js
+.prettierrc.js
+.watchmanconfig
+babel.config.js
+metro.config.js
+tsconfig.json
+tsup.config.ts
+jest.config.js
+
+# Example app files
+App.tsx
+index.js
+app.json
+Gemfile
+
+# Git
+.git
+.gitignore
+
+# Yarn/NPM
+yarn.lock
+package-lock.json
+yarn-error.log
+npm-debug.log
+
+# macOS
+.DS_Store
+
+# Docs (keep README.md, LICENSE, CONTRIBUTING.md)
+docs
+
+# Demo files
+demo.mov
+*.png
+*.gif
