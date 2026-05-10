@@ -25,13 +25,14 @@ describe('useTimelineLayout', () => {
     );
 
     const layout = result.current[0];
-    expect(layout.event.id).toBe('1');
-    expect(layout.top).toBe(450); // 9 hours * 50px per hour
-    expect(layout.height).toBe(50); // 1 hour * 50px
-    expect(layout.left).toBe(0);
-    expect(layout.width).toBe(100);
-    expect(layout.columnIndex).toBe(0);
-    expect(layout.totalColumns).toBe(1);
+    expect(layout).toBeDefined();
+    expect(layout?.event.id).toBe('1');
+    expect(layout?.top).toBe(450); // 9 hours * 50px per hour
+    expect(layout?.height).toBe(50); // 1 hour * 50px
+    expect(layout?.left).toBe(0);
+    expect(layout?.width).toBe(100);
+    expect(layout?.columnIndex).toBe(0);
+    expect(layout?.totalColumns).toBe(1);
   });
 
   it('detects conflicts and assigns columns', () => {
@@ -60,12 +61,14 @@ describe('useTimelineLayout', () => {
     const layout2 = result.current[1];
 
     // Events overlap, should be in different columns
-    expect(layout1.columnIndex).toBe(0);
-    expect(layout2.columnIndex).toBe(1);
-    expect(layout1.width).toBe(50); // 100% / 2 columns
-    expect(layout2.width).toBe(50);
-    expect(layout1.left).toBe(0);
-    expect(layout2.left).toBe(50);
+    expect(layout1).toBeDefined();
+    expect(layout2).toBeDefined();
+    expect(layout1?.columnIndex).toBe(0);
+    expect(layout2?.columnIndex).toBe(1);
+    expect(layout1?.width).toBe(50); // 100% / 2 columns
+    expect(layout2?.width).toBe(50);
+    expect(layout1?.left).toBe(0);
+    expect(layout2?.left).toBe(50);
   });
 
   it('handles non-overlapping events in same column', () => {
@@ -89,9 +92,11 @@ describe('useTimelineLayout', () => {
     );
 
     // No overlap, both can be in column 0, full width
-    expect(result.current[0].columnIndex).toBe(0);
-    expect(result.current[1].columnIndex).toBe(0);
-    expect(result.current[0].width).toBe(100);
-    expect(result.current[1].width).toBe(100);
+    expect(result.current[0]).toBeDefined();
+    expect(result.current[1]).toBeDefined();
+    expect(result.current[0]?.columnIndex).toBe(0);
+    expect(result.current[1]?.columnIndex).toBe(0);
+    expect(result.current[0]?.width).toBe(100);
+    expect(result.current[1]?.width).toBe(100);
   });
 });

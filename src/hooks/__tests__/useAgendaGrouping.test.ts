@@ -70,8 +70,9 @@ describe('useAgendaGrouping', () => {
     );
 
     const may10Section = result.current.find(s => s.date.getDate() === 10);
-    expect(may10Section?.events[0].id).toBe('3'); // All-day first
-    expect(may10Section?.events[1].id).toBe('2'); // 9am
-    expect(may10Section?.events[2].id).toBe('1'); // 2pm
+    expect(may10Section).toBeDefined();
+    expect(may10Section?.events[0]?.id).toBe('3'); // All-day first
+    expect(may10Section?.events[1]?.id).toBe('2'); // 9am
+    expect(may10Section?.events[2]?.id).toBe('1'); // 2pm
   });
 });

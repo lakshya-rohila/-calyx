@@ -396,18 +396,24 @@ function useTimelineLayout(events, date, config) {
     for (const event of sorted) {
       let columnIndex = 0;
       while (columnIndex < columns.length) {
-        const hasConflict = columns[columnIndex].some(
-          (existingEvent) => existingEvent.startDate < event.endDate && existingEvent.endDate > event.startDate
-        );
-        if (!hasConflict) {
-          break;
+        const column = columns[columnIndex];
+        if (column) {
+          const hasConflict = column.some(
+            (existingEvent) => existingEvent.startDate < event.endDate && existingEvent.endDate > event.startDate
+          );
+          if (!hasConflict) {
+            break;
+          }
         }
         columnIndex++;
       }
       if (columnIndex === columns.length) {
         columns.push([]);
       }
-      columns[columnIndex].push(event);
+      const targetColumn = columns[columnIndex];
+      if (targetColumn) {
+        targetColumn.push(event);
+      }
       eventToColumn.set(event.id, columnIndex);
     }
     const layouts = [];
