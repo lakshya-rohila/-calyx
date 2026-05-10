@@ -1643,7 +1643,6 @@ function CurrentTimeLine({ startHour, showToday }) {
     return now.getHours() * 60 + now.getMinutes();
   });
   const fadeAnim = React17.useRef(new reactNative.Animated.Value(0)).current;
-  const topAnim = React17.useRef(new reactNative.Animated.Value(0)).current;
   React17.useEffect(() => {
     if (!showToday) return;
     reactNative.Animated.timing(fadeAnim, {
@@ -1658,17 +1657,9 @@ function CurrentTimeLine({ startHour, showToday }) {
     }, 6e4);
     return () => clearInterval(interval);
   }, [showToday, fadeAnim]);
-  React17.useEffect(() => {
-    const pixelsPerMinute = 50 / 60;
-    const top = (currentMinutes - startHour * 60) * pixelsPerMinute;
-    reactNative.Animated.timing(topAnim, {
-      toValue: top,
-      duration: 500,
-      useNativeDriver: false
-      // Can't use native driver for top
-    }).start();
-  }, [currentMinutes, startHour, topAnim]);
   if (!showToday) return null;
+  const pixelsPerMinute = 50 / 60;
+  const top = (currentMinutes - startHour * 60) * pixelsPerMinute;
   return /* @__PURE__ */ React17__default.default.createElement(
     reactNative.Animated.View,
     {
@@ -1676,7 +1667,7 @@ function CurrentTimeLine({ startHour, showToday }) {
         styles13.container,
         {
           opacity: fadeAnim,
-          top: topAnim
+          top
         }
       ],
       accessibilityLabel: `Current time: ${Math.floor(currentMinutes / 60)}:${(currentMinutes % 60).toString().padStart(2, "0")}`
