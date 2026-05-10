@@ -41,7 +41,7 @@ function App() {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Calyx RN • Phase 4</Text>
+        <Text style={styles.headerTitle}>Calyx RN </Text>
       </View>
 
       <View style={styles.tabs}>
