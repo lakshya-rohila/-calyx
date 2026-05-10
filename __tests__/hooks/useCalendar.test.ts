@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { useCalendar } from '../../src/hooks/useCalendar';
 import { createCalendarStore } from '../../src/store/calendar-store';
 
