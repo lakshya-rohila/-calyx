@@ -85,7 +85,10 @@ function TabButton({ label, active, onPress }: { label: string; active: boolean;
       onPress={onPress}
       style={[styles.tab, active && styles.tabActive]}
     >
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>
+      <Text
+        style={[styles.tabText, active && styles.tabTextActive]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </Pressable>
@@ -114,15 +117,17 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActive: {
     borderBottomWidth: 2,
     borderBottomColor: '#007AFF',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
   },
   tabTextActive: {
