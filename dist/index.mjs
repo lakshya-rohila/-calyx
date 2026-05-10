@@ -1,8 +1,8 @@
-import React8, { createContext, useEffect, useCallback, useMemo, useRef, useContext, useState } from 'react';
+import React17, { createContext, useEffect, useCallback, useMemo, useRef, useContext, useState } from 'react';
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { addWeeks as addWeeks$1, addMonths as addMonths$1, isSameDay as isSameDay$1, isToday as isToday$1, isWeekend as isWeekend$1, isSameMonth as isSameMonth$1, isSameWeek as isSameWeek$1, addDays as addDays$1, startOfMonth as startOfMonth$1, endOfMonth as endOfMonth$1, startOfWeek as startOfWeek$1, endOfWeek as endOfWeek$1, startOfDay as startOfDay$1, endOfDay as endOfDay$1, getDaysInMonth as getDaysInMonth$1, getISOWeek, getDay } from 'date-fns';
-import { StyleSheet, Animated, Pressable, Text, View } from 'react-native';
+import { addWeeks as addWeeks$1, addMonths as addMonths$1, isSameDay as isSameDay$1, isToday as isToday$1, isWeekend as isWeekend$1, isSameMonth as isSameMonth$1, isSameWeek as isSameWeek$1, addDays as addDays$1, startOfMonth as startOfMonth$1, endOfMonth as endOfMonth$1, startOfWeek as startOfWeek$1, endOfWeek as endOfWeek$1, startOfDay as startOfDay$1, endOfDay as endOfDay$1, getDaysInMonth as getDaysInMonth$1, getISOWeek, getDay, format, isTomorrow, isThisWeek } from 'date-fns';
+import { StyleSheet, View, Animated, Pressable, Text, ScrollView, FlatList, ActivityIndicator } from 'react-native';
 
 // src/hooks/useCalendar.ts
 function isSameDay(dateLeft, dateRight) {
@@ -365,13 +365,170 @@ function useWeekCalendar(options = {}) {
     getWeekKey
   };
 }
+function isSameDay2(date1, date2) {
+  return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+}
+function useTimelineLayout(events, date, config) {
+  return useMemo(() => {
+    const { startHour = 0, endHour = 24 } = config;
+    const pixelsPerHour = 50;
+    const dayEvents = events.filter((event) => {
+      return isSameDay2(event.startDate, date) || event.startDate < date && event.endDate >= date;
+    });
+    if (dayEvents.length === 0) {
+      return [];
+    }
+    const sorted = [...dayEvents].sort((a, b) => {
+      const startDiff = a.startDate.getTime() - b.startDate.getTime();
+      if (startDiff !== 0) return startDiff;
+      const durationA = a.endDate.getTime() - a.startDate.getTime();
+      const durationB = b.endDate.getTime() - b.startDate.getTime();
+      return durationB - durationA;
+    });
+    const eventToColumn = /* @__PURE__ */ new Map();
+    const columns = [];
+    for (const event of sorted) {
+      let columnIndex = 0;
+      while (columnIndex < columns.length) {
+        const hasConflict = columns[columnIndex].some(
+          (existingEvent) => existingEvent.startDate < event.endDate && existingEvent.endDate > event.startDate
+        );
+        if (!hasConflict) {
+          break;
+        }
+        columnIndex++;
+      }
+      if (columnIndex === columns.length) {
+        columns.push([]);
+      }
+      columns[columnIndex].push(event);
+      eventToColumn.set(event.id, columnIndex);
+    }
+    const layouts = [];
+    for (const event of sorted) {
+      const columnIndex = eventToColumn.get(event.id);
+      const startMinutes = event.startDate.getHours() * 60 + event.startDate.getMinutes();
+      const endMinutes = event.endDate.getHours() * 60 + event.endDate.getMinutes();
+      const durationMinutes = endMinutes - startMinutes;
+      const top = (startMinutes / 60 - startHour) * pixelsPerHour;
+      const height = Math.max(30, durationMinutes / 60 * pixelsPerHour);
+      const overlappingEvents = sorted.filter(
+        (e) => e.startDate < event.endDate && e.endDate > event.startDate
+      );
+      const maxColumns = Math.max(...overlappingEvents.map((e) => {
+        return eventToColumn.get(e.id) + 1;
+      }));
+      const totalColumns = Math.max(maxColumns, 1);
+      layouts.push({
+        event,
+        top,
+        height,
+        left: columnIndex / totalColumns * 100,
+        width: 1 / totalColumns * 100,
+        columnIndex,
+        totalColumns
+      });
+    }
+    return layouts;
+  }, [events, date, config]);
+}
+function isSameDay3(date1, date2) {
+  return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
+}
+function formatSectionTitle(date) {
+  if (isToday$1(date)) {
+    return `TODAY - ${format(date, "MMMM d, yyyy")}`;
+  }
+  if (isTomorrow(date)) {
+    return `TOMORROW - ${format(date, "MMMM d, yyyy")}`;
+  }
+  if (isThisWeek(date, { weekStartsOn: 0 })) {
+    return `${format(date, "EEEE")} - ${format(date, "MMMM d, yyyy")}`;
+  }
+  return format(date, "MMMM d, yyyy").toUpperCase();
+}
+function useAgendaGrouping(events, startDate, config) {
+  return useMemo(() => {
+    const {
+      groupBy = "day",
+      showEmptyDays = false,
+      futureMonths = 3
+    } = config;
+    const endDate = addMonths$1(startDate, futureMonths);
+    const allDates = [];
+    let currentDate = startOfDay$1(startDate);
+    const finalDate = endOfDay$1(endDate);
+    while (currentDate <= finalDate) {
+      allDates.push(currentDate);
+      currentDate = addDays$1(currentDate, 1);
+    }
+    const sections = allDates.map((date) => {
+      const dayEvents = events.filter((event) => {
+        return isSameDay3(event.startDate, date) || event.startDate < date && event.endDate >= date;
+      }).sort((a, b) => {
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        return a.startDate.getTime() - b.startDate.getTime();
+      });
+      return {
+        title: formatSectionTitle(date),
+        date,
+        events: dayEvents
+      };
+    });
+    const filtered = showEmptyDays ? sections : sections.filter((s) => s.events.length > 0);
+    return filtered;
+  }, [events, startDate, config]);
+}
+function EventDot({ color, size = 6 }) {
+  return /* @__PURE__ */ React17.createElement(
+    View,
+    {
+      style: [
+        styles.dot,
+        {
+          backgroundColor: color,
+          width: size,
+          height: size,
+          borderRadius: size / 2
+        }
+      ]
+    }
+  );
+}
+var styles = StyleSheet.create({
+  dot: {
+    marginHorizontal: 1
+  }
+});
+
+// src/components/EventDots.tsx
+function EventDots({ events, maxDots = 3, dotSize = 6 }) {
+  if (events.length === 0) {
+    return null;
+  }
+  const displayEvents = events.slice(0, maxDots);
+  return /* @__PURE__ */ React17.createElement(View, { style: styles2.container }, displayEvents.map((event) => /* @__PURE__ */ React17.createElement(EventDot, { key: event.id, color: event.color, size: dotSize })));
+}
+var styles2 = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 2,
+    minHeight: 8
+  }
+});
+
+// src/components/primitives/DayCell.tsx
 function DayCell({
   day,
   selected = false,
   disabled = false,
   onPress,
   onLongPress,
-  theme
+  theme,
+  events = []
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
@@ -407,14 +564,14 @@ function DayCell({
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const accessibilityLabel = `${day.calendarDate.day} ${monthNames[day.calendarDate.month - 1]} ${day.calendarDate.year}, ${dayNames[day.dayOfWeek]}`;
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     Animated.View,
     {
       style: [
         { transform: [{ scale: scaleAnim }], opacity: opacityAnim }
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Pressable,
       {
         testID: "day-cell",
@@ -427,7 +584,7 @@ function DayCell({
         onPressIn: handlePressIn,
         onPressOut: handlePressOut,
         style: [
-          styles.cell,
+          styles3.cell,
           {
             width: theme.spacing.cellSize,
             height: theme.spacing.cellSize,
@@ -438,11 +595,11 @@ function DayCell({
           }
         ]
       },
-      /* @__PURE__ */ React8.createElement(
+      /* @__PURE__ */ React17.createElement(View, { style: styles3.cellContent }, /* @__PURE__ */ React17.createElement(
         Text,
         {
           style: [
-            styles.text,
+            styles3.text,
             {
               fontSize: theme.fontSize.day,
               fontWeight: theme.fontWeight.regular,
@@ -452,14 +609,18 @@ function DayCell({
           ]
         },
         day.calendarDate.day
-      )
+      ), events.length > 0 && /* @__PURE__ */ React17.createElement(EventDots, { events, maxDots: 3 }))
     )
   );
 }
-var styles = StyleSheet.create({
+var styles3 = StyleSheet.create({
   cell: {
     justifyContent: "center",
     alignItems: "center"
+  },
+  cellContent: {
+    alignItems: "center",
+    justifyContent: "center"
   },
   text: {
     textAlign: "center"
@@ -473,7 +634,7 @@ function NavigationButton({
 }) {
   const arrow = direction === "left" ? "\u25C0" : "\u25B6";
   const label = direction === "left" ? "Previous" : "Next";
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     Pressable,
     {
       accessibilityRole: "button",
@@ -481,17 +642,17 @@ function NavigationButton({
       onPress: disabled ? void 0 : onPress,
       disabled,
       style: [
-        styles2.button,
+        styles4.button,
         {
           opacity: disabled ? 0.3 : 1
         }
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles2.arrow,
+          styles4.arrow,
           {
             color: theme.colors.primary,
             fontSize: theme.fontSize.header
@@ -502,7 +663,7 @@ function NavigationButton({
     )
   );
 }
-var styles2 = StyleSheet.create({
+var styles4 = StyleSheet.create({
   button: {
     padding: 8,
     justifyContent: "center",
@@ -527,18 +688,18 @@ function CalendarHeader({
 }) {
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const displayText = month !== void 0 ? `${monthNames[month - 1]} ${year}` : weekNumber !== void 0 ? `Week ${weekNumber}, ${year}` : `${year}`;
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     View,
     {
       accessibilityRole: "header",
       style: [
-        styles3.header,
+        styles5.header,
         {
           marginBottom: theme.spacing.headerSpacing
         }
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       NavigationButton,
       {
         direction: "left",
@@ -546,11 +707,11 @@ function CalendarHeader({
         theme
       }
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles3.title,
+          styles5.title,
           {
             fontSize: theme.fontSize.header,
             fontWeight: theme.fontWeight.bold,
@@ -560,7 +721,7 @@ function CalendarHeader({
       },
       displayText
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       NavigationButton,
       {
         direction: "right",
@@ -570,7 +731,7 @@ function CalendarHeader({
     )
   );
 }
-var styles3 = StyleSheet.create({
+var styles5 = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -584,22 +745,22 @@ var styles3 = StyleSheet.create({
 function CalendarWeekDays({ weekStartsOn, theme }) {
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const orderedDays = weekStartsOn === 1 ? [...dayNames.slice(1), dayNames[0]] : dayNames;
-  return /* @__PURE__ */ React8.createElement(View, { style: styles4.container }, orderedDays.map((day) => /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(View, { style: styles6.container }, orderedDays.map((day) => /* @__PURE__ */ React17.createElement(
     View,
     {
       key: day,
       style: [
-        styles4.dayCell,
+        styles6.dayCell,
         {
           width: theme.spacing.cellSize
         }
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles4.dayText,
+          styles6.dayText,
           {
             fontSize: theme.fontSize.weekday,
             fontWeight: theme.fontWeight.bold,
@@ -612,7 +773,7 @@ function CalendarWeekDays({ weekStartsOn, theme }) {
     )
   )));
 }
-var styles4 = StyleSheet.create({
+var styles6 = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -635,7 +796,8 @@ function CalendarDays({
   maxDate,
   disabledDates = [],
   disabled = false,
-  theme
+  theme,
+  events = []
 }) {
   const isDateDisabled = (date) => {
     if (disabled) return true;
@@ -648,13 +810,24 @@ function CalendarDays({
     if (!selected) return false;
     return isSameDay(date, selected);
   };
-  return /* @__PURE__ */ React8.createElement(View, { style: styles5.container }, monthData.weeks.map((week, weekIndex) => /* @__PURE__ */ React8.createElement(View, { key: weekIndex, style: styles5.week }, week.days.map((day, dayIndex) => {
+  const getEventsForDate = (date) => {
+    const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nextDay = new Date(targetDay);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return events.filter((event) => {
+      const eventStart = new Date(event.startDate);
+      const eventEnd = new Date(event.endDate);
+      return eventStart < nextDay && eventEnd >= targetDay;
+    });
+  };
+  return /* @__PURE__ */ React17.createElement(View, { style: styles7.container }, monthData.weeks.map((week, weekIndex) => /* @__PURE__ */ React17.createElement(View, { key: weekIndex, style: styles7.week }, week.days.map((day, dayIndex) => {
     const isSelected = isDateSelected(day.date);
     const isDisabled = isDateDisabled(day.date);
+    const dayEvents = getEventsForDate(day.date);
     if (renderDay) {
-      return /* @__PURE__ */ React8.createElement(View, { key: dayIndex, style: { width: theme.spacing.cellSize } }, renderDay(day));
+      return /* @__PURE__ */ React17.createElement(View, { key: dayIndex, style: { width: theme.spacing.cellSize } }, renderDay(day));
     }
-    return /* @__PURE__ */ React8.createElement(
+    return /* @__PURE__ */ React17.createElement(
       DayCell,
       {
         key: dayIndex,
@@ -662,12 +835,13 @@ function CalendarDays({
         selected: isSelected,
         disabled: isDisabled,
         onPress: () => !isDisabled && onSelectDate?.(day.date),
-        theme
+        theme,
+        events: dayEvents
       }
     );
   }))));
 }
-var styles5 = StyleSheet.create({
+var styles7 = StyleSheet.create({
   container: {
     gap: 0
   },
@@ -913,7 +1087,7 @@ var themes = {
 var ThemeContext = createContext(null);
 function ThemeProvider({ theme, children }) {
   const resolvedTheme = typeof theme === "string" ? themes[theme] : theme;
-  return /* @__PURE__ */ React8.createElement(ThemeContext.Provider, { value: resolvedTheme }, children);
+  return /* @__PURE__ */ React17.createElement(ThemeContext.Provider, { value: resolvedTheme }, children);
 }
 function useTheme() {
   const theme = useContext(ThemeContext);
@@ -939,7 +1113,8 @@ function CalendarMonth({
   disabled,
   renderDay,
   onMonthChange,
-  style
+  style,
+  events = []
 }) {
   const contextTheme = useTheme();
   const resolvedTheme = themeProp ? typeof themeProp === "string" ? themes[themeProp] : themeProp : contextTheme;
@@ -984,11 +1159,11 @@ function CalendarMonth({
       setInternalSelected(date);
     }
   };
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     View,
     {
       style: [
-        styles6.container,
+        styles8.container,
         {
           padding: resolvedTheme.spacing.padding,
           backgroundColor: resolvedTheme.colors.background,
@@ -997,7 +1172,7 @@ function CalendarMonth({
         style
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       CalendarHeader,
       {
         year: calendar.year,
@@ -1007,14 +1182,14 @@ function CalendarMonth({
         theme: resolvedTheme
       }
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       CalendarWeekDays,
       {
         weekStartsOn,
         theme: resolvedTheme
       }
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       CalendarDays,
       {
         monthData: calendar.monthData,
@@ -1025,12 +1200,13 @@ function CalendarMonth({
         maxDate,
         disabledDates,
         disabled,
-        theme: resolvedTheme
+        theme: resolvedTheme,
+        events
       }
     )
   );
 }
-var styles6 = StyleSheet.create({
+var styles8 = StyleSheet.create({
   container: {
     // padding and backgroundColor set by theme
   }
@@ -1092,11 +1268,11 @@ function CalendarWeek({
       setInternalSelected(date);
     }
   };
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     View,
     {
       style: [
-        styles7.container,
+        styles9.container,
         {
           padding: resolvedTheme.spacing.padding,
           backgroundColor: resolvedTheme.colors.background,
@@ -1105,7 +1281,7 @@ function CalendarWeek({
         style
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       CalendarHeader,
       {
         year: calendar.year,
@@ -1115,19 +1291,19 @@ function CalendarWeek({
         theme: resolvedTheme
       }
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       CalendarWeekDays,
       {
         weekStartsOn,
         theme: resolvedTheme
       }
     ),
-    /* @__PURE__ */ React8.createElement(View, { style: styles7.week }, calendar.weekData.days.map((day, index) => {
+    /* @__PURE__ */ React17.createElement(View, { style: styles9.week }, calendar.weekData.days.map((day, index) => {
       const isSelected = currentSelected ? isSameDay(day.date, currentSelected) : false;
       if (renderDay) {
-        return /* @__PURE__ */ React8.createElement(View, { key: index, style: { width: resolvedTheme.spacing.cellSize } }, renderDay(day));
+        return /* @__PURE__ */ React17.createElement(View, { key: index, style: { width: resolvedTheme.spacing.cellSize } }, renderDay(day));
       }
-      return /* @__PURE__ */ React8.createElement(
+      return /* @__PURE__ */ React17.createElement(
         DayCell,
         {
           key: index,
@@ -1140,7 +1316,7 @@ function CalendarWeek({
     }))
   );
 }
-var styles7 = StyleSheet.create({
+var styles9 = StyleSheet.create({
   container: {
     // styled by theme
   },
@@ -1177,11 +1353,11 @@ function CalendarDay({
   const monthName = monthNames[date.getMonth()];
   const dayNumber = date.getDate();
   const year = date.getFullYear();
-  return /* @__PURE__ */ React8.createElement(
+  return /* @__PURE__ */ React17.createElement(
     View,
     {
       style: [
-        styles8.container,
+        styles10.container,
         {
           padding: resolvedTheme.spacing.padding,
           backgroundColor: resolvedTheme.colors.background,
@@ -1190,11 +1366,11 @@ function CalendarDay({
         style
       ]
     },
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles8.dayName,
+          styles10.dayName,
           {
             fontSize: resolvedTheme.fontSize.weekday,
             fontWeight: resolvedTheme.fontWeight.regular,
@@ -1205,11 +1381,11 @@ function CalendarDay({
       },
       dayName
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles8.dayNumber,
+          styles10.dayNumber,
           {
             fontSize: 48,
             fontWeight: resolvedTheme.fontWeight.bold,
@@ -1219,11 +1395,11 @@ function CalendarDay({
       },
       dayNumber
     ),
-    /* @__PURE__ */ React8.createElement(
+    /* @__PURE__ */ React17.createElement(
       Text,
       {
         style: [
-          styles8.monthYear,
+          styles10.monthYear,
           {
             fontSize: resolvedTheme.fontSize.header,
             fontWeight: resolvedTheme.fontWeight.regular,
@@ -1237,7 +1413,7 @@ function CalendarDay({
     )
   );
 }
-var styles8 = StyleSheet.create({
+var styles10 = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
@@ -1253,28 +1429,811 @@ var styles8 = StyleSheet.create({
     // fontSize set by theme
   }
 });
+function TimelineGrid({
+  startHour,
+  endHour,
+  slotDuration,
+  businessHours = { start: 9, end: 17 },
+  theme
+}) {
+  const hours = [];
+  for (let hour = startHour; hour < endHour; hour++) {
+    hours.push(hour);
+  }
+  const formatHour = (hour) => {
+    if (hour === 0) return "12 AM";
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return "12 PM";
+    return `${hour - 12} PM`;
+  };
+  const isBusinessHour = (hour) => {
+    return hour >= businessHours.start && hour < businessHours.end;
+  };
+  return /* @__PURE__ */ React17.createElement(View, { style: styles11.container }, hours.map((hour) => /* @__PURE__ */ React17.createElement(View, { key: hour, style: styles11.hourSlot }, /* @__PURE__ */ React17.createElement(View, { style: styles11.timeLabel }, /* @__PURE__ */ React17.createElement(
+    Text,
+    {
+      style: [styles11.timeLabelText, { color: theme.colors.foreground }],
+      accessibilityRole: "text"
+    },
+    formatHour(hour)
+  )), /* @__PURE__ */ React17.createElement(
+    View,
+    {
+      style: [
+        styles11.hourLine,
+        {
+          backgroundColor: isBusinessHour(hour) ? "rgba(0, 122, 255, 0.05)" : theme.colors.background,
+          borderTopColor: theme.colors.border || "#E0E0E0"
+        }
+      ]
+    },
+    slotDuration === 30 && /* @__PURE__ */ React17.createElement(
+      View,
+      {
+        style: [
+          styles11.halfHourLine,
+          { borderTopColor: "#F0F0F0" }
+        ]
+      }
+    )
+  ))));
+}
+var styles11 = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  hourSlot: {
+    height: 50,
+    // 50px per hour
+    flexDirection: "row"
+  },
+  timeLabel: {
+    width: 60,
+    paddingRight: 8,
+    justifyContent: "flex-start",
+    alignItems: "flex-end"
+  },
+  timeLabelText: {
+    fontSize: 12,
+    fontWeight: "500"
+  },
+  hourLine: {
+    flex: 1,
+    borderTopWidth: 1
+  },
+  halfHourLine: {
+    position: "absolute",
+    top: 25,
+    // Halfway through 50px slot
+    left: 0,
+    right: 0,
+    height: 1,
+    borderTopWidth: 1,
+    borderStyle: "dashed"
+  }
+});
+function TimelineEvent({
+  layout,
+  onPress,
+  onLongPress,
+  theme
+}) {
+  const { event, top, height, left, width } = layout;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0.98,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0.8,
+        duration: 100,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+  const formatTime = (date) => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+  const showDetails = height >= 40;
+  const showDescription = height >= 60;
+  const accessibilityLabel = `${event.title}, ${formatTime(event.startDate)} to ${formatTime(event.endDate)}${event.category ? `, ${event.category} category` : ""}`;
+  return /* @__PURE__ */ React17.createElement(
+    Animated.View,
+    {
+      style: [
+        styles12.container,
+        {
+          position: "absolute",
+          top,
+          height: Math.max(30, height),
+          left: `${left}%`,
+          width: `${width}%`,
+          transform: [{ scale: scaleAnim }],
+          opacity: opacityAnim
+        }
+      ]
+    },
+    /* @__PURE__ */ React17.createElement(
+      Pressable,
+      {
+        onPress: () => onPress?.(event),
+        onLongPress: () => onLongPress?.(event),
+        onPressIn: handlePressIn,
+        onPressOut: handlePressOut,
+        style: [
+          styles12.eventCard,
+          {
+            backgroundColor: event.color,
+            borderLeftColor: event.color
+          }
+        ],
+        accessibilityRole: "button",
+        accessibilityLabel,
+        accessibilityHint: "Double tap to view event details"
+      },
+      /* @__PURE__ */ React17.createElement(Text, { style: styles12.title, numberOfLines: 1 }, event.title),
+      showDetails && /* @__PURE__ */ React17.createElement(Text, { style: styles12.time, numberOfLines: 1 }, formatTime(event.startDate), " - ", formatTime(event.endDate)),
+      showDescription && event.description && /* @__PURE__ */ React17.createElement(Text, { style: styles12.description, numberOfLines: 2 }, event.description)
+    )
+  );
+}
+var styles12 = StyleSheet.create({
+  container: {
+    paddingHorizontal: 2
+  },
+  eventCard: {
+    flex: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderLeftWidth: 4,
+    borderRadius: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2
+  },
+  title: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFF"
+  },
+  time: {
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginTop: 2
+  },
+  description: {
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.8)",
+    marginTop: 2
+  }
+});
+function CurrentTimeLine({ startHour, showToday }) {
+  const [currentMinutes, setCurrentMinutes] = useState(() => {
+    const now = /* @__PURE__ */ new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const topAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!showToday) return;
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true
+    }).start();
+    const interval = setInterval(() => {
+      const now = /* @__PURE__ */ new Date();
+      const newMinutes = now.getHours() * 60 + now.getMinutes();
+      setCurrentMinutes(newMinutes);
+    }, 6e4);
+    return () => clearInterval(interval);
+  }, [showToday, fadeAnim]);
+  useEffect(() => {
+    const pixelsPerMinute = 50 / 60;
+    const top = (currentMinutes - startHour * 60) * pixelsPerMinute;
+    Animated.timing(topAnim, {
+      toValue: top,
+      duration: 500,
+      useNativeDriver: false
+      // Can't use native driver for top
+    }).start();
+  }, [currentMinutes, startHour, topAnim]);
+  if (!showToday) return null;
+  return /* @__PURE__ */ React17.createElement(
+    Animated.View,
+    {
+      style: [
+        styles13.container,
+        {
+          opacity: fadeAnim,
+          top: topAnim
+        }
+      ],
+      accessibilityLabel: `Current time: ${Math.floor(currentMinutes / 60)}:${(currentMinutes % 60).toString().padStart(2, "0")}`
+    },
+    /* @__PURE__ */ React17.createElement(View, { style: styles13.dot }),
+    /* @__PURE__ */ React17.createElement(View, { style: styles13.line })
+  );
+}
+var styles13 = StyleSheet.create({
+  container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    pointerEvents: "none",
+    zIndex: 100
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF3B30",
+    marginLeft: 56
+    // After time label gutter
+  },
+  line: {
+    flex: 1,
+    height: 2,
+    backgroundColor: "#FF3B30"
+  }
+});
+
+// src/components/Calendar/CalendarTimeline.tsx
+function CalendarTimeline({
+  value,
+  onChange,
+  events = [],
+  timelineConfig = {},
+  theme: themeProp,
+  onEventPress,
+  onEventLongPress,
+  style
+}) {
+  const [internalValue, setInternalValue] = useState(value || /* @__PURE__ */ new Date());
+  const currentValue = value !== void 0 ? value : internalValue;
+  const scrollViewRef = useRef(null);
+  const contextTheme = useTheme();
+  const resolvedTheme = themeProp ? typeof themeProp === "string" ? themes[themeProp] : themeProp : contextTheme;
+  const config = {
+    startHour: timelineConfig.startHour ?? 0,
+    endHour: timelineConfig.endHour ?? 24,
+    slotDuration: timelineConfig.slotDuration ?? 30,
+    showCurrentTime: timelineConfig.showCurrentTime ?? true,
+    businessHours: timelineConfig.businessHours ?? { start: 9, end: 17 },
+    scrollToNow: timelineConfig.scrollToNow ?? true
+  };
+  const layouts = useTimelineLayout(events, currentValue, config);
+  const isToday3 = (date) => {
+    const today = /* @__PURE__ */ new Date();
+    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+  };
+  const showCurrentTime = config.showCurrentTime && isToday3(currentValue);
+  useEffect(() => {
+    if (config.scrollToNow && isToday3(currentValue) && scrollViewRef.current) {
+      const now = /* @__PURE__ */ new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const pixelsPerMinute = 50 / 60;
+      const scrollY = (currentMinutes - config.startHour * 60) * pixelsPerMinute - 100;
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, scrollY), animated: true });
+      }, 300);
+    }
+  }, []);
+  const handlePrevious = () => {
+    const newDate = new Date(currentValue);
+    newDate.setDate(newDate.getDate() - 1);
+    if (onChange) {
+      onChange(newDate);
+    } else {
+      setInternalValue(newDate);
+    }
+  };
+  const handleNext = () => {
+    const newDate = new Date(currentValue);
+    newDate.setDate(newDate.getDate() + 1);
+    if (onChange) {
+      onChange(newDate);
+    } else {
+      setInternalValue(newDate);
+    }
+  };
+  const totalHeight = (config.endHour - config.startHour) * 50;
+  return /* @__PURE__ */ React17.createElement(
+    View,
+    {
+      style: [
+        styles14.container,
+        {
+          backgroundColor: resolvedTheme.colors.background,
+          padding: resolvedTheme.spacing.padding
+        },
+        style
+      ]
+    },
+    /* @__PURE__ */ React17.createElement(
+      CalendarHeader,
+      {
+        year: currentValue.getFullYear(),
+        month: currentValue.getMonth(),
+        onPrevious: handlePrevious,
+        onNext: handleNext,
+        theme: resolvedTheme
+      }
+    ),
+    /* @__PURE__ */ React17.createElement(
+      ScrollView,
+      {
+        ref: scrollViewRef,
+        style: styles14.scrollView,
+        showsVerticalScrollIndicator: true,
+        removeClippedSubviews: true
+      },
+      /* @__PURE__ */ React17.createElement(View, { style: { height: totalHeight } }, /* @__PURE__ */ React17.createElement(
+        TimelineGrid,
+        {
+          startHour: config.startHour,
+          endHour: config.endHour,
+          slotDuration: config.slotDuration,
+          businessHours: config.businessHours,
+          theme: resolvedTheme
+        }
+      ), layouts.map((layout) => /* @__PURE__ */ React17.createElement(
+        TimelineEvent,
+        {
+          key: layout.event.id,
+          layout,
+          onPress: onEventPress,
+          onLongPress: onEventLongPress,
+          theme: resolvedTheme
+        }
+      )), showCurrentTime && /* @__PURE__ */ React17.createElement(
+        CurrentTimeLine,
+        {
+          startHour: config.startHour,
+          showToday: true
+        }
+      ))
+    )
+  );
+}
+var styles14 = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  scrollView: {
+    flex: 1
+  }
+});
+function AgendaSectionHeader({
+  title,
+  eventCount,
+  theme
+}) {
+  const accessibilityLabel = `Section, ${title}, ${eventCount} event${eventCount !== 1 ? "s" : ""}`;
+  return /* @__PURE__ */ React17.createElement(
+    View,
+    {
+      style: [
+        styles15.container,
+        { backgroundColor: "#F5F5F5" }
+      ],
+      accessibilityRole: "header",
+      accessibilityLabel
+    },
+    /* @__PURE__ */ React17.createElement(Text, { style: [styles15.title, { color: theme.colors.foreground }] }, title),
+    /* @__PURE__ */ React17.createElement(Text, { style: styles15.count }, eventCount, " event", eventCount !== 1 ? "s" : "")
+  );
+}
+var styles15 = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0"
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5
+  },
+  count: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2
+  }
+});
+function AgendaEvent({
+  event,
+  onPress,
+  onLongPress,
+  theme
+}) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const backgroundAnim = useRef(new Animated.Value(0)).current;
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 0.98,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(backgroundAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: false
+      })
+    ]).start();
+  };
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(backgroundAnim, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: false
+      })
+    ]).start();
+  };
+  const formatTime = (date) => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+  const timeDisplay = event.isAllDay ? "All Day" : `${formatTime(event.startDate)} - ${formatTime(event.endDate)}`;
+  const accessibilityLabel = `${event.title}, ${timeDisplay}${event.description ? `, ${event.description}` : ""}${event.category ? `, ${event.category} category` : ""}`;
+  const backgroundColor = backgroundAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["#FFF", "#F5F5F5"]
+  });
+  return /* @__PURE__ */ React17.createElement(
+    Animated.View,
+    {
+      style: [
+        {
+          transform: [{ scale: scaleAnim }]
+        }
+      ]
+    },
+    /* @__PURE__ */ React17.createElement(
+      Pressable,
+      {
+        onPress: () => onPress?.(event),
+        onLongPress: () => onLongPress?.(event),
+        onPressIn: handlePressIn,
+        onPressOut: handlePressOut,
+        style: styles16.container,
+        accessibilityRole: "button",
+        accessibilityLabel,
+        accessibilityHint: "Double tap to view event details"
+      },
+      /* @__PURE__ */ React17.createElement(
+        Animated.View,
+        {
+          style: [
+            styles16.card,
+            { backgroundColor }
+          ]
+        },
+        /* @__PURE__ */ React17.createElement(View, { style: styles16.leftSection }, /* @__PURE__ */ React17.createElement(
+          View,
+          {
+            style: [
+              styles16.colorDot,
+              { backgroundColor: event.color }
+            ]
+          }
+        ), /* @__PURE__ */ React17.createElement(View, { style: styles16.content }, /* @__PURE__ */ React17.createElement(Text, { style: styles16.time }, timeDisplay), /* @__PURE__ */ React17.createElement(Text, { style: styles16.title, numberOfLines: 1 }, event.title), event.description && /* @__PURE__ */ React17.createElement(Text, { style: styles16.description, numberOfLines: 2 }, event.description), event.category && /* @__PURE__ */ React17.createElement(
+          View,
+          {
+            style: [
+              styles16.categoryBadge,
+              { backgroundColor: `${event.color}20` }
+            ]
+          },
+          /* @__PURE__ */ React17.createElement(Text, { style: [styles16.categoryText, { color: event.color }] }, event.category)
+        )))
+      )
+    )
+  );
+}
+var styles16 = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+    paddingVertical: 8
+  },
+  card: {
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0"
+  },
+  leftSection: {
+    flexDirection: "row",
+    alignItems: "flex-start"
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 4,
+    marginRight: 12
+  },
+  content: {
+    flex: 1
+  },
+  time: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 4
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 4
+  },
+  description: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+    lineHeight: 20
+  },
+  categoryBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: "600"
+  }
+});
+
+// src/components/Calendar/CalendarAgenda.tsx
+function CalendarAgenda({
+  value,
+  onChange,
+  events = [],
+  agendaConfig = {},
+  theme: themeProp,
+  onEventPress,
+  onEventLongPress,
+  style
+}) {
+  const [internalValue, setInternalValue] = useState(value || /* @__PURE__ */ new Date());
+  const currentValue = value !== void 0 ? value : internalValue;
+  const [loadedMonths, setLoadedMonths] = useState(agendaConfig.futureMonths || 3);
+  const contextTheme = useTheme();
+  const resolvedTheme = themeProp ? typeof themeProp === "string" ? themes[themeProp] : themeProp : contextTheme;
+  const config = {
+    groupBy: agendaConfig.groupBy || "day",
+    showEmptyDays: agendaConfig.showEmptyDays || false,
+    futureMonths: loadedMonths,
+    dateFormat: agendaConfig.dateFormat
+  };
+  const sections = useAgendaGrouping(events, currentValue, config);
+  const flatListData = [];
+  sections.forEach((section) => {
+    flatListData.push({ type: "header", section });
+    section.events.forEach((event) => {
+      flatListData.push({ type: "event", event, sectionDate: section.date });
+    });
+  });
+  const handleLoadMore = () => {
+    setLoadedMonths((prev) => prev + 1);
+  };
+  const handlePrevious = () => {
+    const newDate = new Date(currentValue);
+    newDate.setMonth(newDate.getMonth() - 1);
+    if (onChange) {
+      onChange(newDate);
+    } else {
+      setInternalValue(newDate);
+    }
+  };
+  const handleNext = () => {
+    const newDate = new Date(currentValue);
+    newDate.setMonth(newDate.getMonth() + 1);
+    if (onChange) {
+      onChange(newDate);
+    } else {
+      setInternalValue(newDate);
+    }
+  };
+  const renderItem = ({ item }) => {
+    if (item.type === "header") {
+      return /* @__PURE__ */ React17.createElement(
+        AgendaSectionHeader,
+        {
+          title: item.section.title,
+          eventCount: item.section.events.length,
+          theme: resolvedTheme
+        }
+      );
+    }
+    return /* @__PURE__ */ React17.createElement(
+      AgendaEvent,
+      {
+        event: item.event,
+        onPress: onEventPress,
+        onLongPress: onEventLongPress,
+        theme: resolvedTheme
+      }
+    );
+  };
+  const renderFooter = () => {
+    return /* @__PURE__ */ React17.createElement(View, { style: styles17.footer }, /* @__PURE__ */ React17.createElement(ActivityIndicator, { size: "small", color: resolvedTheme.colors.primary }));
+  };
+  return /* @__PURE__ */ React17.createElement(
+    View,
+    {
+      style: [
+        styles17.container,
+        {
+          backgroundColor: resolvedTheme.colors.background
+        },
+        style
+      ]
+    },
+    /* @__PURE__ */ React17.createElement(View, { style: { padding: resolvedTheme.spacing.padding } }, /* @__PURE__ */ React17.createElement(
+      CalendarHeader,
+      {
+        year: currentValue.getFullYear(),
+        month: currentValue.getMonth(),
+        onPrevious: handlePrevious,
+        onNext: handleNext,
+        theme: resolvedTheme
+      }
+    )),
+    /* @__PURE__ */ React17.createElement(
+      FlatList,
+      {
+        data: flatListData,
+        renderItem,
+        keyExtractor: (item, index) => item.type === "header" ? `header-${item.section.date.getTime()}` : `event-${item.event.id}-${index}`,
+        onEndReached: handleLoadMore,
+        onEndReachedThreshold: 0.5,
+        ListFooterComponent: renderFooter,
+        showsVerticalScrollIndicator: true,
+        maxToRenderPerBatch: 10,
+        windowSize: 5,
+        initialNumToRender: 15,
+        removeClippedSubviews: true
+      }
+    )
+  );
+}
+var styles17 = StyleSheet.create({
+  container: {
+    flex: 1
+  },
+  footer: {
+    padding: 20,
+    alignItems: "center"
+  }
+});
 
 // src/components/Calendar/Calendar.tsx
 function Calendar(props) {
   const { mode = "month", showWeekNumbers, ...rest } = props;
   if (mode === "month") {
-    return /* @__PURE__ */ React8.createElement(CalendarMonth, { ...rest });
+    return /* @__PURE__ */ React17.createElement(CalendarMonth, { ...rest });
   }
   if (mode === "week") {
-    return /* @__PURE__ */ React8.createElement(CalendarWeek, { ...rest, showWeekNumber: showWeekNumbers });
+    return /* @__PURE__ */ React17.createElement(CalendarWeek, { ...rest, showWeekNumber: showWeekNumbers });
   }
   if (mode === "day") {
-    return /* @__PURE__ */ React8.createElement(CalendarDay, { ...rest });
+    return /* @__PURE__ */ React17.createElement(CalendarDay, { ...rest });
   }
-  return /* @__PURE__ */ React8.createElement(CalendarMonth, { ...rest });
+  if (mode === "timeline") {
+    return /* @__PURE__ */ React17.createElement(CalendarTimeline, { ...rest });
+  }
+  if (mode === "agenda") {
+    return /* @__PURE__ */ React17.createElement(CalendarAgenda, { ...rest });
+  }
+  return /* @__PURE__ */ React17.createElement(CalendarMonth, { ...rest });
 }
 Calendar.Month = CalendarMonth;
 Calendar.Week = CalendarWeek;
 Calendar.Day = CalendarDay;
+Calendar.Timeline = CalendarTimeline;
+Calendar.Agenda = CalendarAgenda;
 Calendar.Header = CalendarHeader;
 Calendar.WeekDays = CalendarWeekDays;
 Calendar.Days = CalendarDays;
+var generateId = () => {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+var useEventStore = create()(
+  immer((set, get) => ({
+    events: [],
+    addEvent: (input) => {
+      const now = /* @__PURE__ */ new Date();
+      const event = {
+        ...input,
+        id: generateId(),
+        createdAt: now,
+        updatedAt: now
+      };
+      set((state) => {
+        state.events.push(event);
+      });
+      return event;
+    },
+    updateEvent: (id, input) => {
+      set((state) => {
+        const event = state.events.find((e) => e.id === id);
+        if (event) {
+          Object.assign(event, input);
+          event.updatedAt = /* @__PURE__ */ new Date();
+        }
+      });
+    },
+    deleteEvent: (id) => {
+      set((state) => {
+        state.events = state.events.filter((e) => e.id !== id);
+      });
+    },
+    getEventById: (id) => {
+      return get().events.find((e) => e.id === id);
+    },
+    getEventsByDate: (date) => {
+      const events = get().events;
+      const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const nextDay = new Date(targetDay);
+      nextDay.setDate(nextDay.getDate() + 1);
+      return events.filter((event) => {
+        const eventStart = new Date(event.startDate);
+        const eventEnd = new Date(event.endDate);
+        return eventStart < nextDay && eventEnd >= targetDay;
+      });
+    },
+    getEventsByRange: (start, end) => {
+      const events = get().events;
+      return events.filter((event) => {
+        const eventStart = new Date(event.startDate);
+        const eventEnd = new Date(event.endDate);
+        return eventStart < end && eventEnd >= start;
+      });
+    }
+  }))
+);
 
-export { Calendar, DayCell, NavigationButton, ThemeProvider, addDays, addMonths, addWeeks, createCalendarStore, endOfDay, endOfMonth, endOfWeek, fromCalendarDate, generateMonthData, generateWeekData, getDayOfWeek, getDaysInMonth, getWeekNumber, isSameDay, isSameMonth, isSameWeek, isToday, isWeekend, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks, themes, toCalendarDate, useCalendar, useMonthCalendar, useTheme, useWeekCalendar };
+export { Calendar, CalendarAgenda, CalendarTimeline, DayCell, EventDot, EventDots, NavigationButton, ThemeProvider, addDays, addMonths, addWeeks, createCalendarStore, endOfDay, endOfMonth, endOfWeek, fromCalendarDate, generateMonthData, generateWeekData, getDayOfWeek, getDaysInMonth, getWeekNumber, isSameDay, isSameMonth, isSameWeek, isToday, isWeekend, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks, themes, toCalendarDate, useCalendar, useEventStore, useMonthCalendar, useTheme, useWeekCalendar };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map
