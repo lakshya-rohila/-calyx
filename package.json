@@ -1,7 +1,7 @@
 {
-  "name": "@calyx/rn",
-  "version": "0.3.0",
-  "description": "Premium headless calendar library for React Native",
+  "name": "calyx-rn",
+  "version": "0.2.0",
+  "description": "Premium headless calendar library for React Native with Timeline and Agenda views",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "react-native": "src/index.ts",
@@ -37,8 +37,24 @@
     "date-picker",
     "headless",
     "hooks",
-    "typescript"
+    "typescript",
+    "timeline",
+    "agenda",
+    "events",
+    "ios",
+    "android",
+    "mobile"
   ],
+  "author": "Lakshya Rohila",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lakshya-rohila/-calyx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lakshya-rohila/-calyx/issues"
+  },
+  "homepage": "https://github.com/lakshya-rohila/-calyx#readme",
   "sideEffects": false,
   "peerDependencies": {
     "date-fns": "^4.0.0",

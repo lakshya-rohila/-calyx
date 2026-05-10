@@ -1,11 +1,11 @@
 <div align="center">
-  <img src=".github/assets/logo.png" alt="Calyx RN" width="200" />
+  <img src="https://raw.githubusercontent.com/lakshya-rohila/-calyx/main/.github/assets/logo.png" alt="Calyx RN" width="200" />
   
   # Calyx RN
   
   **Premium Calendar Library for React Native**
   
-  [![npm version](https://img.shields.io/npm/v/@calyx/rn.svg)](https://www.npmjs.com/package/@calyx/rn)
+  [![npm version](https://img.shields.io/npm/v/calyx-rn.svg)](https://www.npmjs.com/package/calyx-rn)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
   [![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey.svg)](https://reactnative.dev/)
@@ -22,7 +22,7 @@
 ## 🎥 See It In Action
 
 <div align="center">
-  <video src=".github/assets/demo.mov" width="300" controls></video>
+  <img src="https://raw.githubusercontent.com/lakshya-rohila/-calyx/main/.github/assets/demo.gif" alt="Calyx RN Demo" width="300" />
   
   *Five powerful view modes: Month, Week, Day, Timeline, and Agenda*
 </div>
@@ -102,13 +102,13 @@
 ## 📦 Installation
 
 ```bash
-npm install @calyx/rn date-fns
+npm install calyx-rn date-fns
 ```
 
 or with yarn:
 
 ```bash
-yarn add @calyx/rn date-fns
+yarn add calyx-rn date-fns
 ```
 
 ### Peer Dependencies
@@ -125,7 +125,7 @@ yarn add @calyx/rn date-fns
 
 ```tsx
 import React, { useState } from 'react';
-import { Calendar } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
 
 function MyCalendar() {
   const [selected, setSelected] = useState(new Date());
@@ -375,7 +375,7 @@ Six beautiful themes ready to use:
 Apply theme to entire component tree:
 
 ```tsx
-import { ThemeProvider } from '@calyx/rn';
+import { ThemeProvider } from 'calyx-rn';
 
 function App() {
   return (
@@ -393,7 +393,7 @@ function App() {
 Create your own theme with full type safety:
 
 ```tsx
-import type { CalendarTheme } from '@calyx/rn';
+import type { CalendarTheme } from 'calyx-rn';
 
 const customTheme: CalendarTheme = {
   colors: {
@@ -589,7 +589,7 @@ Use the headless hooks for complete control over rendering:
 ### useMonthCalendar
 
 ```tsx
-import { useMonthCalendar } from '@calyx/rn';
+import { useMonthCalendar } from 'calyx-rn';
 
 const calendar = useMonthCalendar({
   initialDate: new Date(),
@@ -607,7 +607,7 @@ calendar.goToDate(date)
 ### useWeekCalendar
 
 ```tsx
-import { useWeekCalendar } from '@calyx/rn';
+import { useWeekCalendar } from 'calyx-rn';
 
 const calendar = useWeekCalendar({
   initialDate: new Date(),
@@ -625,7 +625,7 @@ calendar.goToPreviousWeek()
 Calculate event positions for Timeline view:
 
 ```tsx
-import { useTimelineLayout } from '@calyx/rn';
+import { useTimelineLayout } from 'calyx-rn';
 
 const layouts = useTimelineLayout(events, currentDate, {
   startHour: 9,
@@ -641,7 +641,7 @@ const layouts = useTimelineLayout(events, currentDate, {
 Group events by day/week/month:
 
 ```tsx
-import { useAgendaGrouping } from '@calyx/rn';
+import { useAgendaGrouping } from 'calyx-rn';
 
 const sections = useAgendaGrouping(events, startDate, {
   groupBy: 'day',
@@ -659,8 +659,8 @@ const sections = useAgendaGrouping(events, startDate, {
 ### Fetching from API
 
 ```tsx
-import { Calendar } from '@calyx/rn';
-import type { CalendarEvent } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
+import type { CalendarEvent } from 'calyx-rn';
 
 function MyCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -690,7 +690,7 @@ function MyCalendar() {
 
 ```tsx
 import { useQuery } from '@tanstack/react-query';
-import { Calendar } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
 
 function MyCalendar() {
   const { data: events = [] } = useQuery({
@@ -706,7 +706,7 @@ function MyCalendar() {
 
 ```tsx
 import { create } from 'zustand';
-import { Calendar } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
 
 const useEventStore = create((set) => ({
   events: [],
@@ -805,7 +805,7 @@ function MultiSelectCalendar() {
 
 ```tsx
 import { render, fireEvent } from '@testing-library/react-native';
-import { Calendar } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
 
 test('selects date when pressed', () => {
   const onSelect = jest.fn();
@@ -839,8 +839,8 @@ test('selects date when pressed', () => {
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/calyx-rn.git
-cd calyx-rn
+git clone https://github.com/lakshya-rohila/-calyx.git
+cd -calyx
 
 # Install dependencies
 npm install
@@ -894,7 +894,7 @@ Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) 
 
 ## 📄 License
 
-MIT © [Your Name]
+MIT © Lakshya Rohila
 
 See [LICENSE](LICENSE) for details.
 
@@ -902,10 +902,9 @@ See [LICENSE](LICENSE) for details.
 
 ## 💬 Support
 
-- 📧 Email: support@calyx-rn.com
-- 💬 Discord: [Join our community](https://discord.gg/calyx-rn)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/calyx-rn/issues)
-- 📖 Docs: [Full Documentation](https://calyx-rn.com/docs)
+- 🐛 Issues: [GitHub Issues](https://github.com/lakshya-rohila/-calyx/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/lakshya-rohila/-calyx/discussions)
+- ⭐ Star: [Star on GitHub](https://github.com/lakshya-rohila/-calyx)
 
 ---
 
@@ -922,7 +921,7 @@ Built with ❤️ using:
   <strong>Made with ❤️ for the React Native community</strong>
   <br />
   <br />
-  <a href="https://github.com/yourusername/calyx-rn">⭐️ Star us on GitHub</a>
+  <a href="https://github.com/lakshya-rohila/-calyx">⭐️ Star us on GitHub</a>
   •
-  <a href="https://www.npmjs.com/package/@calyx/rn">📦 View on npm</a>
+  <a href="https://www.npmjs.com/package/calyx-rn">📦 View on npm</a>
 </div>
