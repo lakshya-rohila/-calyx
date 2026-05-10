@@ -73,3 +73,19 @@ export type {
   CreateEventInput,
   UpdateEventInput,
 } from './types/events';
+
+// Phase 4 exports - Timeline & Agenda Views
+export type {
+  TimelineConfig,
+  TimelineEventLayout,
+} from './types/timeline';
+
+export type {
+  AgendaConfig,
+  AgendaSection,
+} from './types/agenda';
+
+export {
+  CalendarTimeline,
+  CalendarAgenda,
+} from './components';

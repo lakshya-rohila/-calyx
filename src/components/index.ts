@@ -1,5 +1,6 @@
 // Main exports
 export { Calendar } from './Calendar';
+export { CalendarTimeline, CalendarAgenda } from './Calendar';
 export type {
   CalendarProps,
   CalendarMonthProps,
