@@ -13,7 +13,6 @@ export function CurrentTimeLine({ startHour, showToday }: CurrentTimeLineProps) 
   });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const topAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!showToday) return;
@@ -35,19 +34,11 @@ export function CurrentTimeLine({ startHour, showToday }: CurrentTimeLineProps) 
     return () => clearInterval(interval);
   }, [showToday, fadeAnim]);
 
-  useEffect(() => {
-    // Animate position changes
-    const pixelsPerMinute = 50 / 60; // 50px per hour
-    const top = (currentMinutes - startHour * 60) * pixelsPerMinute;
-
-    Animated.timing(topAnim, {
-      toValue: top,
-      duration: 500,
-      useNativeDriver: false, // Can't use native driver for top
-    }).start();
-  }, [currentMinutes, startHour, topAnim]);
-
   if (!showToday) return null;
+
+  // Calculate position directly without animation (smoother and simpler)
+  const pixelsPerMinute = 50 / 60; // 50px per hour
+  const top = (currentMinutes - startHour * 60) * pixelsPerMinute;
 
   return (
     <Animated.View
@@ -55,7 +46,7 @@ export function CurrentTimeLine({ startHour, showToday }: CurrentTimeLineProps) 
         styles.container,
         {
           opacity: fadeAnim,
-          top: topAnim,
+          top,
         },
       ]}
       accessibilityLabel={`Current time: ${Math.floor(currentMinutes / 60)}:${(currentMinutes % 60).toString().padStart(2, '0')}`}
