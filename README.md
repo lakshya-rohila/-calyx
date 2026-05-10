@@ -84,6 +84,35 @@ import { Calendar } from '@calyx/rn';
 />
 ```
 
+### Timeline View
+
+```tsx
+<Calendar
+  mode="timeline"
+  events={events}
+  timelineConfig={{
+    startHour: 8,
+    endHour: 20,
+    slotDuration: 30,
+    showCurrentTime: true,
+  }}
+/>
+```
+
+### Agenda/List View
+
+```tsx
+<Calendar
+  mode="agenda"
+  events={events}
+  agendaConfig={{
+    groupBy: 'day',
+    showEmptyDays: false,
+    futureMonths: 3,
+  }}
+/>
+```
+
 ### Custom Theme
 
 ```tsx
@@ -100,6 +129,8 @@ import { ThemeProvider } from '@calyx/rn';
 - 🎨 **6 Built-in Themes** - Light, dark, ocean, forest, sunset, minimal
 - 🪝 **Compound Components** - Calendar.Month, Calendar.Week, Calendar.Day
 - 📅 **Event System** - Display events from any API or backend
+- ⏰ **Timeline View** - Hourly grid with conflict detection
+- 📅 **Agenda View** - Chronological list with grouping
 - 🎭 **Full Customization** - Render props for complete control
 - 📘 **TypeScript-First** - Strict mode, full type inference
 - ♿️ **Accessible** - WCAG 2.1 AA compliant
@@ -170,6 +201,36 @@ const calendar = useMonthCalendar({ weekStartsOn: 0 });
 // Access: calendar.monthData, calendar.goToNextMonth(), etc.
 ```
 
+### Timeline View
+
+```tsx
+<Calendar.Timeline
+  value={date}
+  events={events}
+  timelineConfig={{
+    startHour: 9,
+    endHour: 18,
+    slotDuration: 30,
+    businessHours: { start: 9, end: 17 },
+  }}
+  onEventPress={(event) => console.log(event)}
+/>
+```
+
+### Agenda View
+
+```tsx
+<Calendar.Agenda
+  value={date}
+  events={events}
+  agendaConfig={{
+    groupBy: 'day',
+    futureMonths: 3,
+  }}
+  onEventPress={(event) => console.log(event)}
+/>
+```
+
 ## Customization
 
 ### Custom Day Rendering
@@ -229,8 +290,8 @@ npm run build
 
 **Phase 1:** ✅ Core foundation (hooks, engine, store)  
 **Phase 2:** ✅ UI component system  
-**Phase 3:** ✅ Event management (current)  
-**Phase 4:** Advanced views (timeline, agenda)  
+**Phase 3:** ✅ Event management  
+**Phase 4:** ✅ Advanced views (timeline, agenda) (current)  
 **Phase 5:** Theme engine  
 **Phase 6:** Animation system  
 **Phase 7:** Developer experience (docs, Storybook)  
