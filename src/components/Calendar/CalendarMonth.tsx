@@ -8,6 +8,7 @@ import { useTheme } from '../theme';
 import { themes } from '../theme/themes';
 import type { CalendarMonthProps } from './types';
 import type { CalendarTheme } from '../theme/types';
+import type { CalendarEvent } from '../../types/events';
 
 export function CalendarMonth({
   value,
@@ -25,7 +26,8 @@ export function CalendarMonth({
   renderDay,
   onMonthChange,
   style,
-}: CalendarMonthProps) {
+  events = [],
+}: CalendarMonthProps & { events?: CalendarEvent[] }) {
   // Resolve theme
   const contextTheme = useTheme();
   const resolvedTheme: CalendarTheme = themeProp
@@ -121,6 +123,7 @@ export function CalendarMonth({
         disabledDates={disabledDates}
         disabled={disabled}
         theme={resolvedTheme}
+        events={events}
       />
     </View>
   );

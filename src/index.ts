@@ -63,3 +63,13 @@ export type {
   CalendarTheme,
   ThemeName,
 } from './components';
+
+// Phase 3 exports - Event Management (NEW)
+export { useEventStore } from './store/event-store';
+export { EventDot, EventDots } from './components';
+
+export type {
+  CalendarEvent,
+  CreateEventInput,
+  UpdateEventInput,
+} from './types/events';

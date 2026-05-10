@@ -1,7 +1,9 @@
 import React, { useRef } from 'react';
-import { Pressable, Text, Animated, StyleSheet } from 'react-native';
+import { Pressable, Text, Animated, StyleSheet, View } from 'react-native';
 import type { DayData } from '../../types';
 import type { CalendarTheme } from '../theme/types';
+import type { CalendarEvent } from '../../types/events';
+import { EventDots } from '../EventDots';
 
 type DayCellProps = {
   day: DayData;
@@ -10,6 +12,7 @@ type DayCellProps = {
   onPress?: () => void;
   onLongPress?: () => void;
   theme: CalendarTheme;
+  events?: CalendarEvent[];
 };
 
 export function DayCell({
@@ -19,6 +22,7 @@ export function DayCell({
   onPress,
   onLongPress,
   theme,
+  events = [],
 }: DayCellProps) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(1)).current;
@@ -88,27 +92,30 @@ export function DayCell({
           },
         ]}
       >
-        <Text
-          style={[
-            styles.text,
-            {
-              fontSize: theme.fontSize.day,
-              fontWeight: theme.fontWeight.regular,
-              color: disabled
-                ? theme.colors.disabled
-                : selected
-                ? theme.colors.selectedForeground
-                : day.isToday
-                ? theme.colors.todayForeground
-                : day.isWeekend
-                ? theme.colors.weekend
-                : theme.colors.foreground,
-              opacity: !day.isCurrentMonth ? 0.4 : 1,
-            },
-          ]}
-        >
-          {day.calendarDate.day}
-        </Text>
+        <View style={styles.cellContent}>
+          <Text
+            style={[
+              styles.text,
+              {
+                fontSize: theme.fontSize.day,
+                fontWeight: theme.fontWeight.regular,
+                color: disabled
+                  ? theme.colors.disabled
+                  : selected
+                  ? theme.colors.selectedForeground
+                  : day.isToday
+                  ? theme.colors.todayForeground
+                  : day.isWeekend
+                  ? theme.colors.weekend
+                  : theme.colors.foreground,
+                opacity: !day.isCurrentMonth ? 0.4 : 1,
+              },
+            ]}
+          >
+            {day.calendarDate.day}
+          </Text>
+          {events.length > 0 && <EventDots events={events} maxDots={3} />}
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -118,6 +125,10 @@ const styles = StyleSheet.create({
   cell: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cellContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
     textAlign: 'center',

@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { DayCell } from '../primitives';
 import { isSameDay } from '../../engine/calendar-math';
 import type { CalendarDaysProps } from './types';
+import type { CalendarEvent } from '../../types/events';
 
 export function CalendarDays({
   monthData,
@@ -14,7 +15,8 @@ export function CalendarDays({
   disabledDates = [],
   disabled = false,
   theme,
-}: CalendarDaysProps) {
+  events = [],
+}: CalendarDaysProps & { events?: CalendarEvent[] }) {
   const isDateDisabled = (date: Date): boolean => {
     if (disabled) return true;
     if (minDate && date < minDate) return true;
@@ -28,6 +30,18 @@ export function CalendarDays({
     return isSameDay(date, selected);
   };
 
+  const getEventsForDate = (date: Date): CalendarEvent[] => {
+    const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nextDay = new Date(targetDay);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    return events.filter((event) => {
+      const eventStart = new Date(event.startDate);
+      const eventEnd = new Date(event.endDate);
+      return eventStart < nextDay && eventEnd >= targetDay;
+    });
+  };
+
   return (
     <View style={styles.container}>
       {monthData.weeks.map((week, weekIndex) => (
@@ -35,6 +49,7 @@ export function CalendarDays({
           {week.days.map((day, dayIndex) => {
             const isSelected = isDateSelected(day.date);
             const isDisabled = isDateDisabled(day.date);
+            const dayEvents = getEventsForDate(day.date);
 
             if (renderDay) {
               return (
@@ -52,6 +67,7 @@ export function CalendarDays({
                 disabled={isDisabled}
                 onPress={() => !isDisabled && onSelectDate?.(day.date)}
                 theme={theme}
+                events={dayEvents}
               />
             );
           })}
