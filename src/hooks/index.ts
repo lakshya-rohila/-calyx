@@ -15,3 +15,7 @@ export type {
   UseWeekCalendarOptions,
   UseWeekCalendarReturn,
 } from './useWeekCalendar';
+
+// Phase 4: Timeline & Agenda hooks
+export { useTimelineLayout } from './useTimelineLayout';
+export { useAgendaGrouping } from './useAgendaGrouping';
