@@ -11,8 +11,9 @@ import {
 import { CalendarDemo } from './example/screens/CalendarDemo';
 import { ThemeSwitcher } from './example/screens/ThemeSwitcher';
 import { CustomizationDemo } from './example/screens/CustomizationDemo';
+import { CalendarWithAPIDemo } from './example/screens/CalendarWithAPIDemo';
 
-type TabKey = 'demo' | 'themes' | 'custom';
+type TabKey = 'demo' | 'themes' | 'custom' | 'api';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -26,6 +27,8 @@ function App() {
         return <ThemeSwitcher />;
       case 'custom':
         return <CustomizationDemo />;
+      case 'api':
+        return <CalendarWithAPIDemo />;
     }
   };
 
@@ -34,7 +37,7 @@ function App() {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Calyx RN • Phase 2</Text>
+        <Text style={styles.headerTitle}>Calyx RN • Phase 3</Text>
       </View>
 
       <View style={styles.tabs}>
@@ -42,6 +45,11 @@ function App() {
           label="Demo"
           active={activeTab === 'demo'}
           onPress={() => setActiveTab('demo')}
+        />
+        <TabButton
+          label="API"
+          active={activeTab === 'api'}
+          onPress={() => setActiveTab('api')}
         />
         <TabButton
           label="Themes"
