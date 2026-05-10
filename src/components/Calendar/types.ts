@@ -59,7 +59,7 @@ export type CalendarMonthProps = {
   defaultSelected?: Date;
 
   // Config
-  weekStartsOn?: 0 | 1;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   theme?: CalendarTheme | ThemeName;
 
   // Constraints
@@ -87,7 +87,7 @@ export type CalendarWeekProps = {
   onSelect?: (date: Date) => void;
   defaultSelected?: Date;
 
-  weekStartsOn?: 0 | 1;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   theme?: CalendarTheme | ThemeName;
 
   showWeekNumber?: boolean;
@@ -120,7 +120,7 @@ export type CalendarHeaderProps = {
 };
 
 export type CalendarWeekDaysProps = {
-  weekStartsOn: 0 | 1;
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   theme: CalendarTheme;
 };
 

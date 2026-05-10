@@ -48,3 +48,18 @@ export { generateMonthData, generateWeekData } from './engine';
 
 // Store (EXPERT API - for custom state management)
 export { createCalendarStore } from './store/calendar-store';
+
+// Phase 2 exports (NEW)
+export { Calendar } from './components';
+export { DayCell, NavigationButton } from './components';
+export { ThemeProvider, useTheme, themes } from './components';
+
+export type {
+  CalendarProps,
+  CalendarMonthProps,
+  CalendarWeekProps,
+  CalendarDayProps,
+  CalendarMode,
+  CalendarTheme,
+  ThemeName,
+} from './components';
