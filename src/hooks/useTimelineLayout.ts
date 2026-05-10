@@ -50,11 +50,14 @@ export function useTimelineLayout(
       let columnIndex = 0;
       while (columnIndex < columns.length) {
         // Check if this event conflicts with ANY event in this column
-        const hasConflict = columns[columnIndex].some(existingEvent =>
-          existingEvent.startDate < event.endDate && existingEvent.endDate > event.startDate
-        );
-        if (!hasConflict) {
-          break; // No conflict, can use this column
+        const column = columns[columnIndex];
+        if (column) {
+          const hasConflict = column.some(existingEvent =>
+            existingEvent.startDate < event.endDate && existingEvent.endDate > event.startDate
+          );
+          if (!hasConflict) {
+            break; // No conflict, can use this column
+          }
         }
         columnIndex++;
       }
@@ -64,7 +67,10 @@ export function useTimelineLayout(
         columns.push([]);
       }
 
-      columns[columnIndex].push(event);
+      const targetColumn = columns[columnIndex];
+      if (targetColumn) {
+        targetColumn.push(event);
+      }
       eventToColumn.set(event.id, columnIndex);
     }
 
