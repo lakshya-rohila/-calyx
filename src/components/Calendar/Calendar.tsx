@@ -2,6 +2,8 @@ import React from 'react';
 import { CalendarMonth } from './CalendarMonth';
 import { CalendarWeek } from './CalendarWeek';
 import { CalendarDay } from './CalendarDay';
+import { CalendarTimeline } from './CalendarTimeline';
+import { CalendarAgenda } from './CalendarAgenda';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarWeekDays } from './CalendarWeekDays';
 import { CalendarDays } from './CalendarDays';
@@ -22,6 +24,14 @@ export function Calendar(props: CalendarProps) {
     return <CalendarDay {...rest} />;
   }
 
+  if (mode === 'timeline') {
+    return <CalendarTimeline {...rest} />;
+  }
+
+  if (mode === 'agenda') {
+    return <CalendarAgenda {...rest} />;
+  }
+
   return <CalendarMonth {...rest} />;
 }
 
@@ -29,6 +39,8 @@ export function Calendar(props: CalendarProps) {
 Calendar.Month = CalendarMonth;
 Calendar.Week = CalendarWeek;
 Calendar.Day = CalendarDay;
+Calendar.Timeline = CalendarTimeline;
+Calendar.Agenda = CalendarAgenda;
 Calendar.Header = CalendarHeader;
 Calendar.WeekDays = CalendarWeekDays;
 Calendar.Days = CalendarDays;
