@@ -6,6 +6,7 @@ export { CalendarHeader } from './CalendarHeader';
 export { CalendarWeekDays } from './CalendarWeekDays';
 export { CalendarDays } from './CalendarDays';
 export { CalendarTimeline } from './CalendarTimeline';
+export { AgendaSectionHeader } from './AgendaSectionHeader';
 
 export type {
   CalendarProps,
