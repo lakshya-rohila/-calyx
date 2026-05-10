@@ -41,16 +41,12 @@
   ],
   "sideEffects": false,
   "peerDependencies": {
+    "date-fns": "^4.0.0",
     "react": ">=18.0.0",
     "react-native": ">=0.70.0"
   },
   "dependencies": {
-    "@shopify/flash-list": "^2.3.1",
-    "date-fns": "^4.1.0",
     "immer": "^11.1.8",
-    "react": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-safe-area-context": "^5.2.1",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useMemo } from 'react';
-import { createCalendarStore } from '../store/calendar-store';
+import { createCalendarStore, useCalendarStore } from '../store/calendar-store';
 import { isSameDay } from '../engine/calendar-math';
 import type { WeekConfig } from '../engine/types';
 import type { CalendarState } from '../store/calendar-store';
@@ -30,16 +30,13 @@ export type UseCalendarReturn = {
   isDateCurrent: (date: Date) => boolean;
 };
 
-// Default store instance for when no store is provided
-const defaultStoreInstance = createCalendarStore();
-
 export function useCalendar(options: UseCalendarOptions = {}): UseCalendarReturn {
   const {
     initialDate,
     weekStartsOn,
     onDateChange,
     onDateSelect,
-    store = defaultStoreInstance,
+    store = useCalendarStore,
   } = options;
 
   // Subscribe to store slices

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useEffect } from 'react';
 import { useCalendar } from './useCalendar';
 import { generateWeekData } from '../engine/week-generator';
 import { addWeeks, getWeekNumber } from '../engine/calendar-math';
-import { createCalendarStore } from '../store/calendar-store';
+import { createCalendarStore, useCalendarStore } from '../store/calendar-store';
 import type { UseCalendarOptions, UseCalendarReturn } from './useCalendar';
 import type { WeekData } from '../engine/types';
 import type { CalendarState } from '../store/calendar-store';
@@ -27,11 +27,8 @@ export type UseWeekCalendarReturn = UseCalendarReturn & {
   generateWeekAtOffset: (offset: number) => WeekData;
 };
 
-// Default store for when no store is provided
-const defaultStoreInstance = createCalendarStore();
-
 export function useWeekCalendar(options: UseWeekCalendarOptions = {}): UseWeekCalendarReturn {
-  const { onWeekChange, store = defaultStoreInstance, ...calendarOptions } = options;
+  const { onWeekChange, store = useCalendarStore, ...calendarOptions } = options;
 
   // Base calendar hook
   const calendar = useCalendar({ ...calendarOptions, store });

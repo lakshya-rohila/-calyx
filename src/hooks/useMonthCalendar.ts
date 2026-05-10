@@ -2,7 +2,7 @@ import { useCallback, useMemo, useEffect } from 'react';
 import { useCalendar } from './useCalendar';
 import { generateMonthData } from '../engine/month-generator';
 import { addMonths } from '../engine/calendar-math';
-import { createCalendarStore } from '../store/calendar-store';
+import { createCalendarStore, useCalendarStore } from '../store/calendar-store';
 import type { UseCalendarOptions, UseCalendarReturn } from './useCalendar';
 import type { MonthData } from '../engine/types';
 import type { CalendarState } from '../store/calendar-store';
@@ -27,11 +27,8 @@ export type UseMonthCalendarReturn = UseCalendarReturn & {
   generateMonthAtOffset: (offset: number) => MonthData;
 };
 
-// Default store for when no store is provided
-const defaultStoreInstance = createCalendarStore();
-
 export function useMonthCalendar(options: UseMonthCalendarOptions = {}): UseMonthCalendarReturn {
-  const { onMonthChange, store = defaultStoreInstance, ...calendarOptions } = options;
+  const { onMonthChange, store = useCalendarStore, ...calendarOptions } = options;
 
   // Base calendar hook
   const calendar = useCalendar({ ...calendarOptions, store });
