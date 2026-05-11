@@ -144,8 +144,8 @@ function MyCalendar() {
 ### Calendar with Events
 
 ```tsx
-import { Calendar } from '@calyx/rn';
-import type { CalendarEvent } from '@calyx/rn';
+import { Calendar } from 'calyx-rn';
+import type { CalendarEvent } from 'calyx-rn';
 
 function EventCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([
@@ -858,20 +858,6 @@ npm run build
 npm run ios
 npm run android
 ```
-
----
-
-## 🗺️ Roadmap
-
-- **Phase 1:** ✅ Core foundation (hooks, engine, store)
-- **Phase 2:** ✅ UI component system
-- **Phase 3:** ✅ Event management
-- **Phase 4:** ✅ Advanced views (timeline, agenda) **← Current**
-- **Phase 5:** 🚧 Theme engine enhancements
-- **Phase 6:** 🔜 Advanced animations
-- **Phase 7:** 🔜 Developer experience (docs site, Storybook)
-- **Phase 8:** 🔜 Advanced features (recurring events, time zones)
-- **Phase 9:** 🔜 Production polish
 
 ---
 
